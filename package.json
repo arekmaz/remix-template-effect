@@ -1,5 +1,6 @@
 {
   "name": "remix-template-effect",
+  "version": "1.0.1",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "@effect/platform": "^0.58.20",
+    "@effect/platform-node": "^0.53.19",
     "@effect/schema": "^0.68.17",
     "@remix-run/express": "^2.10.2",
     "@remix-run/node": "^2.10.2",
