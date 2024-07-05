@@ -1,4 +1,6 @@
-# Welcome to Remix!
+# Remix - Effect template
+
+A template that I'm using to quickly scaffold a remix project initiated with effect
 
 - 📖 [Remix docs](https://remix.run/docs)
 

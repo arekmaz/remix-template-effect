@@ -11,11 +11,14 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@effect/platform": "^0.58.20",
+    "@effect/schema": "^0.68.17",
     "@remix-run/express": "^2.10.2",
     "@remix-run/node": "^2.10.2",
     "@remix-run/react": "^2.10.2",
     "compression": "^1.7.4",
     "cross-env": "^7.0.3",
+    "effect": "^3.4.7",
     "express": "^4.19.2",
     "isbot": "^4.1.0",
     "morgan": "^1.10.0",
