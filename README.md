@@ -2,6 +2,10 @@
 
 A template that I'm using to quickly scaffold a remix project initiated with effect
 
+Credits:
+ - https://github.com/mikearnaldi
+ - https://github.com/datner
+
 - 📖 [Remix docs](https://remix.run/docs)
 
 ## Development
