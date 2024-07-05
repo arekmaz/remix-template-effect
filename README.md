@@ -1,10 +1,17 @@
 # Remix - Effect template
 
-A template that I'm using to quickly scaffold a remix project initiated with effect
+Project generated from `https://github.com/arekmaz/remix-template-effect`.
+
+To scaffold a project named `remix-test`, simply run
+
+```bash
+npx create-remix remix-test --template https://github.com/arekmaz/remix-template-effect
+```
 
 Credits:
- - https://github.com/mikearnaldi
- - https://github.com/datner
+
+- https://github.com/mikearnaldi
+- https://github.com/datner
 
 - 📖 [Remix docs](https://remix.run/docs)
 
