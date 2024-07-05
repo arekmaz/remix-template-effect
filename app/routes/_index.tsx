@@ -2,7 +2,7 @@ import { HttpServerRequest } from '@effect/platform';
 import type { MetaFunction } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { Effect } from 'effect';
-import { makeLoader } from 'remix-effect';
+import { makeLoader, RemixArgs } from '~/remix-effect';
 
 export const meta: MetaFunction = () => {
   return [
@@ -18,7 +18,7 @@ export const loader = makeLoader(
     return Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
 
-      return { url: request.url };
+      return { url: request.url, reqId: yield* RemixArgs.requestId };
     });
   })
 );

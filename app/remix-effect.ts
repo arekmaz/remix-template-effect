@@ -2,10 +2,15 @@ import { HttpClient, HttpServerRequest } from '@effect/platform';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { Effect, Layer, ManagedRuntime } from 'effect';
 
+type AppContext = {
+  getRequestId: () => string;
+};
+
 export class RemixArgs extends Effect.Tag('@app/services/RemixArgs')<
   RemixArgs,
   Omit<LoaderFunctionArgs, 'context'> & {
-    ctx: LoaderFunctionArgs['context'];
+    ctx: AppContext;
+    requestId: Effect.Effect<string, never, never>;
   }
 >() {}
 
@@ -21,13 +26,19 @@ export const makeRemixRuntime = <R>(layer: Layer.Layer<R, never, never>) => {
   ) => {
     const makeLoaderPromise = runtime.runPromise(body);
 
-    return (args: LoaderFunctionArgs) =>
-      makeLoaderPromise.then((effect) =>
+    return ({ context, ...args }: LoaderFunctionArgs) => {
+      const ctx = context as AppContext;
+
+      return makeLoaderPromise.then((effect) =>
         runtime.runPromise(
           effect.pipe(
             Effect.provideService(
               RemixArgs,
-              RemixArgs.of({ ...args, ctx: args.context })
+              RemixArgs.of({
+                ...args,
+                ctx,
+                requestId: Effect.sync(ctx.getRequestId),
+              })
             ),
             Effect.provideService(
               HttpServerRequest.HttpServerRequest,
@@ -38,6 +49,7 @@ export const makeRemixRuntime = <R>(layer: Layer.Layer<R, never, never>) => {
           )
         )
       );
+    };
   };
 
   return {
