@@ -1,6 +1,6 @@
 import { HttpClient, HttpServerRequest } from '@effect/platform';
 import { LoaderFunctionArgs } from '@remix-run/node';
-import { Effect, Layer, ManagedRuntime } from 'effect';
+import { Effect, Layer, ManagedRuntime, Scope } from 'effect';
 
 type AppContext = {
   getRequestId: () => string;
@@ -19,7 +19,11 @@ export const makeRemixRuntime = <R>(layer: Layer.Layer<R, never, never>) => {
 
   const dataFunctionFromEffect = <A, E>(
     body: Effect.Effect<
-      Effect.Effect<A, E, R | RemixArgs | HttpServerRequest.HttpServerRequest>,
+      Effect.Effect<
+        A,
+        E,
+        R | RemixArgs | HttpServerRequest.HttpServerRequest | Scope.Scope
+      >,
       never,
       R
     >
@@ -45,7 +49,8 @@ export const makeRemixRuntime = <R>(layer: Layer.Layer<R, never, never>) => {
               HttpServerRequest.HttpServerRequest.of(
                 HttpServerRequest.fromWeb(args.request)
               )
-            )
+            ),
+            Effect.scoped
           )
         )
       );
