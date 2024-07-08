@@ -11,8 +11,16 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@effect/opentelemetry": "^0.34.30",
     "@effect/platform": "^0.58.20",
     "@effect/schema": "^0.68.17",
+    "@opentelemetry/exporter-metrics-otlp-proto": "^0.52.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.52.1",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.52.1",
+    "@opentelemetry/sdk-metrics": "^1.25.1",
+    "@opentelemetry/sdk-trace-base": "^1.25.1",
+    "@opentelemetry/sdk-trace-node": "^1.25.1",
+    "@opentelemetry/sdk-trace-web": "^1.25.1",
     "@remix-run/express": "^2.10.2",
     "@remix-run/node": "^2.10.2",
     "@remix-run/react": "^2.10.2",
@@ -20,9 +28,11 @@
     "cross-env": "^7.0.3",
     "effect": "^3.4.7",
     "express": "^4.19.2",
+    "i": "^0.3.7",
     "isbot": "^4.1.0",
     "morgan": "^1.10.0",
     "nanoid": "^5.0.7",
+    "npm": "^10.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

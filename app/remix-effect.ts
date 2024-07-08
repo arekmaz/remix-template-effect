@@ -1,10 +1,25 @@
+import { NodeSdk } from '@effect/opentelemetry';
 import { HttpClient, HttpServerRequest } from '@effect/platform';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { LoaderFunctionArgs } from '@remix-run/node';
-import { Effect, Layer, ManagedRuntime } from 'effect';
+import { Effect, Layer, ManagedRuntime, Scope } from 'effect';
+import pckg from '../package.json';
 
 type AppContext = {
   getRequestId: () => string;
 };
+
+const NodeSdkLive = NodeSdk.layer(() => ({
+  resource: {
+    serviceName: pckg.name,
+  },
+  spanProcessor: new BatchSpanProcessor(
+    new OTLPTraceExporter({
+      url: 'http://localhost:4318/v1/traces',
+    })
+  ),
+}));
 
 export class RemixArgs extends Effect.Tag('@app/services/RemixArgs')<
   RemixArgs,
@@ -12,14 +27,18 @@ export class RemixArgs extends Effect.Tag('@app/services/RemixArgs')<
     ctx: AppContext;
     requestId: Effect.Effect<string, never, never>;
   }
->() {}
+>() { }
 
 export const makeRemixRuntime = <R>(layer: Layer.Layer<R, never, never>) => {
   const runtime = ManagedRuntime.make(layer);
 
   const dataFunctionFromEffect = <A, E>(
     body: Effect.Effect<
-      Effect.Effect<A, E, R | RemixArgs | HttpServerRequest.HttpServerRequest>,
+      Effect.Effect<
+        A,
+        E,
+        R | RemixArgs | HttpServerRequest.HttpServerRequest | Scope.Scope
+      >,
       never,
       R
     >
@@ -45,7 +64,8 @@ export const makeRemixRuntime = <R>(layer: Layer.Layer<R, never, never>) => {
               HttpServerRequest.HttpServerRequest.of(
                 HttpServerRequest.fromWeb(args.request)
               )
-            )
+            ),
+            Effect.scoped
           )
         )
       );
@@ -60,5 +80,5 @@ export const makeRemixRuntime = <R>(layer: Layer.Layer<R, never, never>) => {
 };
 
 export const { makeAction, makeLoader, runtime } = makeRemixRuntime(
-  HttpClient.layer
+  HttpClient.layer.pipe(Layer.merge(NodeSdkLive))
 );
