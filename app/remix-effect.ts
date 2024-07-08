@@ -5,6 +5,7 @@ import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { LoaderFunctionArgs } from '@remix-run/node';
 import { Effect, Layer, ManagedRuntime, Scope } from 'effect';
 import pckg from '../package.json';
+import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
 
 type AppContext = {
   getRequestId: () => string;
@@ -19,6 +20,7 @@ const NodeSdkLive = NodeSdk.layer(() => ({
       url: 'http://localhost:4318/v1/traces',
     })
   ),
+  metricReader: new PrometheusExporter({ port: 9090 }),
 }));
 
 export class RemixArgs extends Effect.Tag('@app/services/RemixArgs')<
@@ -31,6 +33,7 @@ export class RemixArgs extends Effect.Tag('@app/services/RemixArgs')<
 
 export const makeRemixRuntime = <R>(layer: Layer.Layer<R, never, never>) => {
   const runtime = ManagedRuntime.make(layer);
+  const runtimeScope = Effect.runSync(Scope.make());
 
   const dataFunctionFromEffect = <A, E>(
     body: Effect.Effect<
@@ -40,10 +43,12 @@ export const makeRemixRuntime = <R>(layer: Layer.Layer<R, never, never>) => {
         R | RemixArgs | HttpServerRequest.HttpServerRequest | Scope.Scope
       >,
       never,
-      R
+      R | Scope.Scope
     >
   ) => {
-    const makeLoaderPromise = runtime.runPromise(body);
+    const makeLoaderPromise = runtime.runPromise(
+      body.pipe(Effect.provideService(Scope.Scope, runtimeScope))
+    );
 
     return ({ context, ...args }: LoaderFunctionArgs) => {
       const ctx = context as AppContext;

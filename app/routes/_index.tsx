@@ -16,36 +16,74 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-const downloadPerson = (id: string) =>
-  HttpClientRequest.get('https://swapi.dev/api/people/' + id).pipe(
+const downloadPeople = Effect.gen(function* () {
+  const responseSchema = Schema.Struct({
+    next: Schema.NullOr(Schema.NonEmpty),
+    results: Schema.NonEmptyArray(Schema.Struct({ url: Schema.NonEmpty })),
+  });
+
+  const download = (url: string) =>
+    HttpClientRequest.get(url, {}).pipe(
+      Effect.flatMap(HttpClientResponse.schemaBodyJson(responseSchema))
+    );
+
+  const load = (url: string): ReturnType<typeof download> =>
+    Effect.gen(function* () {
+      const first = yield* download(url);
+
+      if (first.next) {
+        return yield* load(first.next).pipe(
+          Effect.map((r) => ({
+            results: [...first.results, ...r.results] as const,
+            next: r.next,
+          }))
+        );
+      }
+
+      return first;
+    });
+
+  return yield* load('https://swapi.dev/api/people');
+}).pipe(Effect.withSpan('downloadPeople1'));
+
+const downloadPersonByUrl = (url: string) =>
+  HttpClientRequest.get(url).pipe(
     Effect.flatMap(
       HttpClientResponse.schemaBodyJson(
         Schema.Struct({ name: Schema.NonEmpty })
       )
     ),
-    Effect.withSpan('downloadPerson'),
-    Effect.annotateSpans('person-id', id)
+    Effect.withSpan('downloadPerson')
   );
 
 export const loader = makeLoader(
   Effect.gen(function* () {
     yield* Effect.logDebug('init / loader');
 
+    const cachedDownloadPeople = yield* Effect.cachedWithTTL(
+      downloadPeople.pipe(
+        Effect.flatMap(({ results }) =>
+          Effect.allSuccesses(
+            results.map(({ url }) => downloadPersonByUrl(url))
+          )
+        ),
+        Effect.withSpan('process people for request')
+      ),
+      '20 seconds'
+    );
+
     return Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest.pipe(
         Effect.withSpan('read http request')
       );
 
-      const people = yield* Effect.forEach(
-        Array.from({ length: 16 }, (_, i) => i + 1),
-        (id) => downloadPerson(String(id)).pipe(Effect.timeout('2 second')),
-        { concurrency: 'unbounded' }
-      ).pipe(Effect.orDie);
+      const people = yield* cachedDownloadPeople;
 
       return {
         url: request.url,
-        people,
         reqId: yield* RemixArgs.requestId.pipe(Effect.withSpan('read req id')),
+        totalPeople: people.length,
+        people,
       };
     }).pipe(
       Effect.withSpan('c'),
