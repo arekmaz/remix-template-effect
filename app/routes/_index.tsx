@@ -11,12 +11,42 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+const task = (
+  name: string,
+  delay: number,
+  children: ReadonlyArray<Effect.Effect<void>> = []
+) =>
+  Effect.gen(function* () {
+    yield* Effect.log(name);
+    yield* Effect.sleep(`${delay} millis`);
+    for (const child of children) {
+      yield* child;
+    }
+    yield* Effect.sleep(`${delay} millis`);
+  }).pipe(Effect.withSpan(name));
+
+const poll = task('/poll', 1);
+
+const program = task('client', 2, [
+  task('/api', 3, [
+    task('/authN', 4, [task('/authZ', 5)]),
+    task('/payment Gateway', 6, [task('DB', 7), task('Ext. Merchant', 8)]),
+    task('/dispatch', 9, [
+      task('/dispatch/search', 10),
+      Effect.all([poll, poll, poll], { concurrency: 'inherit' }),
+      task('/pollDriver/{id}', 11),
+    ]),
+  ]),
+]);
+
 export const loader = makeLoader(
   Effect.gen(function* () {
     yield* Effect.logDebug('init / loader');
 
     return Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
+
+      yield* program;
 
       return { url: request.url, reqId: yield* RemixArgs.requestId };
     });
