@@ -44,7 +44,7 @@ const downloadPeople = Effect.gen(function* () {
     });
 
   return yield* load('https://swapi.dev/api/people');
-}).pipe(Effect.withSpan('downloadPeople1'));
+}).pipe(Effect.withSpan('downloadPeople'));
 
 const downloadPersonByUrl = (url: string) =>
   HttpClientRequest.get(url).pipe(
@@ -61,14 +61,19 @@ export const loader = makeLoader(
     yield* Effect.logDebug('init / loader');
 
     const cachedDownloadPeople = yield* Effect.cachedWithTTL(
-      downloadPeople.pipe(
+      downloadPeople,
+      '2 hours'
+    );
+
+    const cachedLoadFreshPeople = yield* Effect.cachedWithTTL(
+      cachedDownloadPeople.pipe(
         Effect.flatMap(({ results }) =>
           Effect.allSuccesses(
-            results.map(({ url }) => downloadPersonByUrl(url))
+            results.map(({ url }) => downloadPersonByUrl(url)),
+            { concurrency: 'unbounded' }
           )
         ),
-        Effect.map(Array.map(({ name }) => name)),
-        Effect.withSpan('process people for request')
+        Effect.map(Array.map(({ name }) => name))
       ),
       '20 seconds'
     );
@@ -78,7 +83,11 @@ export const loader = makeLoader(
         Effect.withSpan('read http request')
       );
 
-      const people = yield* cachedDownloadPeople;
+      const people = yield* cachedLoadFreshPeople.pipe(
+        Effect.withSpan('process people for request')
+      );
+
+      yield* Effect.logError('log test');
 
       return {
         url: request.url,
