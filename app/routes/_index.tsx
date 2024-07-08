@@ -6,7 +6,7 @@ import {
 import { Schema } from '@effect/schema';
 import type { MetaFunction } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
-import { Effect } from 'effect';
+import { Array, Effect } from 'effect';
 import { makeLoader, RemixArgs } from '~/remix-effect';
 
 export const meta: MetaFunction = () => {
@@ -67,6 +67,7 @@ export const loader = makeLoader(
             results.map(({ url }) => downloadPersonByUrl(url))
           )
         ),
+        Effect.map(Array.map(({ name }) => name)),
         Effect.withSpan('process people for request')
       ),
       '20 seconds'
