@@ -1,17 +1,29 @@
 # Remix - Effect template
 
-Project generated from `https://github.com/arekmaz/remix-template-effect`.
+## Project generated from `https://github.com/arekmaz/remix-template-effect`.
 
-To scaffold a project named `remix-test`, simply run
+## To scaffold a project named `remix-test`, simply run
 
 ```bash
 npx create-remix remix-test --template https://github.com/arekmaz/remix-template-effect
 ```
 
-Credits:
+## Credits:
 
 - https://github.com/mikearnaldi
 - https://github.com/datner
+
+## Local telemetry docker setup:
+
+Ensure docker is installed, then from the project folder, run:
+
+```bash
+cd docker; docker compose up -d
+```
+
+Go to the grafana dashboard at `http://localhost:4445/explore`, you should see tracing data from you local server.
+
+More info: https://effect.website/docs/guides/observability/telemetry/tracing
 
 - 📖 [Remix docs](https://remix.run/docs)
 

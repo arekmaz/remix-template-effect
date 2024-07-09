@@ -19,7 +19,7 @@ export const loader = makeLoader(
       const request = yield* HttpServerRequest.HttpServerRequest;
 
       return { url: request.url, reqId: yield* RemixArgs.requestId };
-    });
+    }).pipe(Effect.withSpan('/ loader'));
   })
 );
 
