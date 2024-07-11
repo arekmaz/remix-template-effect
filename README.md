@@ -5,7 +5,7 @@
 ## To scaffold a project named `remix-test`, simply run
 
 ```bash
-npx create-remix remix-test --template https://github.com/arekmaz/remix-template-effect
+npx create-remix remix-test --template arekmaz/remix-template-effect
 ```
 
 ## Credits:
